@@ -15,13 +15,13 @@ repos:
 
 # code format according to black
 -   repo: https://github.com/ambv/black
-    rev: 24.4.2
+    rev: 24.10.0
     hooks:
     -   id: black
 
 # check for python styling with flake8
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.1.1
     hooks:
     -   id: flake8
         additional_dependencies: [
