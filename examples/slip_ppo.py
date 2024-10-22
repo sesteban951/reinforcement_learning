@@ -2,7 +2,9 @@ import pickle
 import sys
 
 import jax
-from brax.training.distribution import NormalTanhDistribution
+from brax.training.distribution import (
+    NormalTanhDistribution,  # can choose what this distribution, TODO: look into this
+)
 
 from playground.architectures import MLP
 from playground.envs.slip.slip_env import SlipEnv
@@ -23,10 +25,14 @@ def train():
     # Create policy and save it to a file
     network_wrapper = BraxPPONetworksWrapper(
         policy_network=MLP(
-            layer_sizes=(12, 12, 3)
+            layer_sizes=(
+                12,
+                12,
+                6,
+            )  # hidden layers and output layer. the output is the mean and covariance of your action
         ),  # TODO: check the layer sizes
         value_network=MLP(
-            layer_sizes=(48, 48, 1)
+            layer_sizes=(64, 64, 1)  # hidden layers and output layer
         ),  # TODO: check the layer sizes
         action_distribution=NormalTanhDistribution,
     )

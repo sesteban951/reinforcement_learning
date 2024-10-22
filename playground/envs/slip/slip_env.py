@@ -50,7 +50,9 @@ class SlipEnv(PipelineEnv):
         mj_model = mujoco.MjModel.from_xml_path(config.model_path)
         sys = mjcf.load_model(mj_model)
 
-        super().__init__(sys, n_frames=5, backend="mjx")
+        super().__init__(
+            sys, n_frames=5, backend="mjx"
+        )  # n_frames: number of sim steps per control step
 
     # define a reset function
     def reset(self, rng: jax.random.PRNGKey) -> State:
@@ -79,12 +81,12 @@ class SlipEnv(PipelineEnv):
         obs = self._compute_obs(data, {})
 
         # fill in other state info
-        reward, done, zero = jnp.zeros(3)  # TODO: what are these metrics for?
+        reward, done, zero = jnp.zeros(3)  # for Tensorboard
         metrics = {
             "reward_height": zero,
-            "reward_angled_leg": zero,
-            "reward_vel": zero,
-            "reward_ctrl": zero,
+            # "reward_angled_leg": zero,
+            # "reward_vel": zero,
+            # "reward_ctrl": zero,
         }
         state_info = {"rng": rng, "step": 0}
 
@@ -95,40 +97,50 @@ class SlipEnv(PipelineEnv):
         """Take a step in the environment."""
         # Simulate physics
         data0 = state.pipeline_state
+
+        # TODO: scale the action, by default it is in (-1, 1). either divide or mulitply by something, idk.
+
         data = self.pipeline_step(data0, action)
 
         # TODO: play with the reward function
 
         # Compute fwd velocity cost
-        vx_vel = (data.x.pos[0] - data0.x.pos[0]) / self.dt
-        vy_vel = (data.x.pos[1] - data0.x.pos[1]) / self.dt
-        vel_cost = self.config.vel_cost_weight * (
-            jnp.square(vx_vel) + jnp.square(vy_vel)
-        )
+        # vx_vel = (
+        #     data.x.pos[0, 0] - data0.x.pos[0, 0]
+        # ) / self.dt  # TODO: check state access correctly. The 'x' might be some JAX thing
+        # vy_vel = (data.x.pos[1] - data0.x.pos[1]) / self.dt
+        # vel_cost = self.config.vel_cost_weight * (
+        #     jnp.square(vx_vel) + jnp.square(vy_vel)
+        # )
 
         # Compute the height reward
         height_cost = self.config.height_cost_weight * jnp.square(
-            data.x.pos[2] - self.config.desired_height
+            data.x.pos[2, 0]
+            - self.config.desired_height  # TODO: check the state access
         )
 
-        # Compute the straight leg reward
-        angled_leg_cost = self.config.angled_leg_cost_weight * (
-            jnp.square(data.x.pos[3]) + jnp.square(data.x.pos[4])
-        )
+        # # Compute the straight leg reward
+        # angled_leg_cost = self.config.angled_leg_cost_weight * (
+        #     jnp.square(data.x.pos[3])
+        #     + jnp.square(data.x.pos[4])  # TODO: check the state access
+        # )
 
-        # Compute the control cost
-        ctrl_cost = self.config.ctrl_cost_weight * jnp.sum(jnp.square(action))
+        # # Compute the control cost
+        # ctrl_cost = self.config.ctrl_cost_weight * jnp.sum(
+        #     jnp.square(action)
+        # )  # TODO: is redundant since we do pos control
 
         # compute the total reward
-        reward = -(height_cost + angled_leg_cost + vel_cost + ctrl_cost)
+        # reward = -(height_cost + angled_leg_cost + vel_cost + ctrl_cost)
+        reward = -(height_cost)
 
         # update the state
         obs = self._compute_obs(data, state.info)
-        state.metrics.update(
+        state.metrics.update(  # for Tensorboard
             reward_height=-height_cost,
-            reward_vel=-vel_cost,
-            reward_angled_leg=-angled_leg_cost,
-            reward_ctrl=-ctrl_cost,
+            # reward_vel=-vel_cost,
+            # reward_angled_leg=-angled_leg_cost,
+            # reward_ctrl=-ctrl_cost,  # TODO: first pass just see if the pipeline works with just the control cost
         )
         state.info["step"] += 1
 
