@@ -38,7 +38,8 @@
         <geom name="plane" type="plane" size="0.0 0.0 0.125" material="groundplane"/>
 
         <!-- COM Body -->
-        <body name="com" pos="0 0 1.0">
+        <body name="com" pos="0 0 0.65">
+            <camera name="track" mode="trackcom" pos="0 -3 0.3" xyaxes="1 0 0 0 0 1"/>
             <!-- <freejoint name="root" /> -->
             <joint name="root_x" type="slide" axis="1 0 0"/>
             <joint name="root_y" type="slide" axis="0 1 0"/>
@@ -56,8 +57,8 @@
 
             <!-- Upper Leg -->
             <body name="leg_upper" pos="0 0 -0.15">
-                <joint name="leg_pitch" axis="1 0 0" pos="0 0 0.15" limited="true" range="-1.2 1.2"/>
-                <joint name="leg_roll" axis="0 1 0" pos="0 0 0.15" limited="true" range="-1.2 1.2"/>
+                <joint name="leg_roll" axis="1 0 0" pos="0 0 0.15" limited="true" range="-1.2 1.2"/>
+                <joint name="leg_pitch" axis="0 1 0" pos="0 0 0.15" limited="true" range="-1.2 1.2"/>
                 <geom name="leg_upper" class="visual" type="cylinder" size="0.025 0.15" rgba="0.2 0.2 0.2 0.5"/>
 
                 <!-- Lower Leg -->
@@ -77,9 +78,9 @@
 
     <!-- Actuators -->
     <actuator>
-        <position name="leg_pitch" ctrllimited="true" ctrlrange="-1.0 1.0" joint="leg_pitch" kp="0.1" dampratio="1"/>
-        <position name="leg_roll" ctrllimited="true" ctrlrange="-1.0 1.0" joint="leg_roll" kp="0.1" dampratio="1"/>
-        <position name="leg_prismatic" ctrllimited="true" ctrlrange="-0.15 0.15" joint="leg_prismatic" kp="5" dampratio="0.5"/>
+        <position name="leg_pitch" ctrllimited="true" ctrlrange="-1.0 1.0" joint="leg_pitch" kp="0.001" dampratio="1"/>
+        <position name="leg_roll" ctrllimited="true" ctrlrange="-1.0 1.0" joint="leg_roll" kp="0.001" dampratio="1"/>
+        <position name="leg_prismatic" ctrllimited="true" ctrlrange="-0.15 0.15" joint="leg_prismatic" kp="0.05" dampratio="1"/>
     </actuator>
 
 </mujoco>
