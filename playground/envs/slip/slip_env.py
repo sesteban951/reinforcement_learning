@@ -20,17 +20,16 @@ class SlipConfig:
     model_path: Union[Path, str] = ROOT + "/envs/slip/slip.xml"
 
     # reset state params, Uniform(-p, p)
-    pos_reset_noise_scale: float = 0.3
-    vel_reset_noise_scale: float = 0.2
+    pos_reset_noise_scale: float = 0.5
+    vel_reset_noise_scale: float = 0.3
 
     # desired hopping apex height
     desired_height: float = 0.8  # in the z-direction
 
     # reward coefficients
-    height_cost_weight: float = 1.0  # hopping at certain height reward
+    height_cost_weight: float = 5.0  # hopping at certain height reward
     angled_leg_cost_weight: float = 0.1  # straight leg reward
     vel_cost_weight: float = 0.1  # x-y velocity cost
-    ctrl_cost_weight: float = 0.05  # effort applied cost
 
 
 class SlipEnv(PipelineEnv):
@@ -86,7 +85,6 @@ class SlipEnv(PipelineEnv):
             "reward_height": zero,
             "reward_angled_leg": zero,
             "reward_vel": zero,
-            "reward_ctrl": zero,
         }
         state_info = {"rng": rng, "step": 0}
 
@@ -98,41 +96,28 @@ class SlipEnv(PipelineEnv):
         # Simulate physics
         data0 = state.pipeline_state
         # TODO: scale the action, by default it is in (-1, 1). either divide or mulitply by something, idk.
-        # print(type(data0))
         data = self.pipeline_step(data0, action)
-        # print(type(data))
 
         # TODO: play with the reward function
         # Compute fwd velocity cost
-        vx_vel = (
-            data.qpos[0] - data0.qpos[0]
-        ) / self.dt  # TODO: check state access correctly. The 'x' might be some JAX thing
+        vx_vel = (data.qpos[0] - data0.qpos[0]) / self.dt
         vy_vel = (data.qpos[1] - data0.qpos[1]) / self.dt
-        vel_cost = self.config.vel_cost_weight * (
-            jnp.square(vx_vel) + jnp.square(vy_vel)
-        )
+        vx_cost = self.config.vel_cost_weight * jnp.square(vx_vel)
+        vy_cost = self.config.vel_cost_weight * jnp.square(vy_vel)
+        vel_cost = vx_cost + vy_cost
 
         # Compute the height reward
         height_cost = self.config.height_cost_weight * jnp.square(
-            data.qpos[2]
-            - self.config.desired_height  # TODO: check the state access
+            data.qpos[2] - self.config.desired_height
         )
 
         # Compute the straight leg reward
         angled_leg_cost = self.config.angled_leg_cost_weight * (
-            jnp.square(data.qpos[3])
-            + jnp.square(data.qpos[4])  # TODO: check the state access
+            jnp.square(data.qpos[3]) + jnp.square(data.qpos[4])
         )
 
-        # Compute the control cost
-        ctrl_cost = self.config.ctrl_cost_weight * jnp.sum(
-            jnp.square(action)
-        )  # TODO: is redundant since we do pos control
-
         # compute the total reward
-        reward = -(height_cost + angled_leg_cost + vel_cost + ctrl_cost)
-        # reward = -ctrl_cost
-        print(reward)
+        reward = -(height_cost + angled_leg_cost + vel_cost)
 
         # update the state
         obs = self._compute_obs(data, state.info)
@@ -140,7 +125,6 @@ class SlipEnv(PipelineEnv):
             reward_height=-height_cost,
             reward_vel=-vel_cost,
             reward_angled_leg=-angled_leg_cost,
-            reward_ctrl=-ctrl_cost,  # TODO: first pass just see if the pipeline works with just the control cost
         )
         state.info["step"] += 1
 

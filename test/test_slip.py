@@ -57,6 +57,6 @@ def test_slip_env():
 
 if __name__ == "__main__":
     print("Running SLIP tests")
-    # test_slip_mujoco_model()
-    # test_slip_config()
+    test_slip_mujoco_model()
+    test_slip_config()
     test_slip_env()

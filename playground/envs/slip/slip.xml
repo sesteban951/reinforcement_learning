@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mujoco model="3D_SLIP">
 
-    <option timestep="0.005" iterations="3" ls_iterations="10" solver="Newton">
+    <!-- TODO: mess with iterations and ls_iterations -->
+    <option timestep="0.002" iterations="3" ls_iterations="5" solver="Newton">
         <flag eulerdamp="disable"/>
     </option>
 
@@ -26,7 +27,7 @@
 
     <!-- Default properties -->
     <default>
-        <geom conaffinity="1" contype="1" density="1.0" friction="0.6 0.6 0.6"/>
+        <geom conaffinity="1" contype="1" density="0.5" friction="0.8 0.8 0.8"/>
         <default class="visual">
             <geom conaffinity="0" contype="0"/>
         </default>
@@ -39,7 +40,8 @@
 
         <!-- COM Body -->
         <body name="com" pos="0 0 0.65">
-            <camera name="track" mode="trackcom" pos="0 -3 0.3" xyaxes="1 0 0 0 0 1"/>
+            <!-- <camera name="track" mode="trackcom" pos="0 -3 0.3" xyaxes="1 0 0 0 0 1"/> -->
+            <camera name="track" mode="targetbody" pos="0 -3 0.3" xyaxes="1 0 0 0 0 1" target="com"/>
             <!-- <freejoint name="root" /> -->
             <joint name="root_x" type="slide" axis="1 0 0"/>
             <joint name="root_y" type="slide" axis="0 1 0"/>
@@ -53,22 +55,23 @@
 
             <!-- CoM has sphere collisions but a fancy mesh visual-->
             <geom name="com_mesh" class="visual" mesh="com" type="mesh" rgba="1.0 0.424 0.047 1.0" />
-            <geom name="com_collision" type="sphere" size="0.075" rgba="0.0 0.0 0.0 0.0" />
+            <geom name="com_collision" type="sphere" density="1.0" size="0.075" rgba="0.0 0.0 0.0 0.0" />
 
             <!-- Upper Leg -->
             <body name="leg_upper" pos="0 0 -0.15">
                 <joint name="leg_roll" axis="1 0 0" pos="0 0 0.15" limited="true" range="-1.2 1.2"/>
                 <joint name="leg_pitch" axis="0 1 0" pos="0 0 0.15" limited="true" range="-1.2 1.2"/>
-                <geom name="leg_upper" class="visual" type="cylinder" size="0.025 0.15" rgba="0.2 0.2 0.2 0.5"/>
+                <geom name="leg_upper" class="visual" type="cylinder" density="0.5" size="0.025 0.15" rgba="0.2 0.2 0.2 0.5"/>
 
                 <!-- Lower Leg -->
                 <body name="leg_lower" pos="0 0 -0.15">
+                    <!-- Spring stiffness here? -->
                     <joint name="leg_prismatic" axis="0 0 1" type="slide" limited="true" range="-0.15 0.15"/>
-                    <geom name="leg_lower" class="visual" type="cylinder" size="0.015 0.15" rgba="1.0 1.0 1.0 0.5"/>
+                    <geom name="leg_lower" class="visual" type="cylinder" density="0.5" size="0.015 0.15" rgba="1.0 1.0 1.0 0.5"/>
 
                     <!-- Foot -->
                     <body name="foot" pos="0 0 -0.15">
-                        <geom name="foot_sphere" type="sphere" density="0.1" size="0.025" rgba="0 0 0 1.0"/>
+                        <geom name="foot_sphere" type="sphere" density="0.5" size="0.025" rgba="0 0 0 1.0"/>
                     </body>
 
                 </body>
@@ -78,9 +81,9 @@
 
     <!-- Actuators -->
     <actuator>
-        <position name="leg_pitch" ctrllimited="true" ctrlrange="-1.0 1.0" joint="leg_pitch" kp="0.001" dampratio="1"/>
-        <position name="leg_roll" ctrllimited="true" ctrlrange="-1.0 1.0" joint="leg_roll" kp="0.001" dampratio="1"/>
-        <position name="leg_prismatic" ctrllimited="true" ctrlrange="-0.15 0.15" joint="leg_prismatic" kp="0.05" dampratio="1"/>
+        <position name="leg_pitch" ctrllimited="true" ctrlrange="-1.0 1.0" joint="leg_pitch" kp="0.01" dampratio="1"/>
+        <position name="leg_roll" ctrllimited="true" ctrlrange="-1.0 1.0" joint="leg_roll" kp="0.01" dampratio="1"/>
+        <position name="leg_prismatic" ctrllimited="true" ctrlrange="-0.15 0.15" joint="leg_prismatic" kp="0.5" dampratio="1"/>
     </actuator>
 
 </mujoco>

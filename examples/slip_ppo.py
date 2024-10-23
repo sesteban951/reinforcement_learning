@@ -26,8 +26,8 @@ def train():
     network_wrapper = BraxPPONetworksWrapper(
         policy_network=MLP(
             layer_sizes=(
-                12,
-                12,
+                64,
+                64,
                 6,
             )  # hidden layers and output layer. the output is the mean and covariance of your action
         ),  # TODO: check the layer sizes
@@ -43,20 +43,20 @@ def train():
         network_wrapper=network_wrapper,
         save_path="/tmp/slip_ppo.pkl",
         tensorboard_logdir="/tmp/rl_playground/slip_ppo",
-        num_timesteps=50_000_000,
+        num_timesteps=100_000_000,  # tot num sim steps before training stops, change here to get more
         num_evals=10,
-        reward_scaling=1.0,
+        reward_scaling=0.1,
         episode_length=100,
         normalize_observations=True,
         unroll_length=10,
-        num_minibatches=32,
-        num_updates_per_batch=8,
+        num_minibatches=128,
+        num_updates_per_batch=24,
         discounting=0.97,
         learning_rate=1e-3,
         clipping_epsilon=0.2,
         entropy_cost=1e-3,
-        num_envs=2048,
-        batch_size=1024,
+        num_envs=4096,
+        batch_size=4096,
         seed=0,
     )
 
